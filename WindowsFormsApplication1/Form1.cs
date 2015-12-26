@@ -13,16 +13,35 @@ namespace WindowsFormsApplication1
 {
     public partial class Form1 : Form
     {
+        bool autoScrape = false;
+        bool firstTime = true;
+        bool firstTimeAuto = true;
+        
+
         public Form1()
         {
             InitializeComponent();
 
         }
         List<string> links = new List<string>();
+        List<string> linkQueue = new List<string>();
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             textBox3.Text = webBrowser1.Url.ToString();
-            linkListMaker();
+            if(!autoScrape && ! firstTime) linkListMaker();
+            if(autoScrape && links.Count <= numericUpDown1.Value && firstTimeAuto)
+            {
+                linkListMaker();
+                firstTimeAuto = false;
+            }
+            if(autoScrape && links.Count <= numericUpDown1.Value && !firstTimeAuto)
+            {
+                webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
+                linkListMaker();
+                linkQueue.RemoveAt(0);
+            }
+
+            firstTime = false;
         }
         private void linkListMaker()
         {
@@ -30,10 +49,12 @@ namespace WindowsFormsApplication1
             HtmlElementCollection link = webBrowser1.Document.GetElementsByTagName("A");
             foreach (HtmlElement i in link)
             {
-                    links.Add(i.GetAttribute("href").ToString());
+                links.Add(i.GetAttribute("href").ToString());
+                linkQueue.Add(i.GetAttribute("href").ToString());
             }
 
-            links = links.Distinct().ToList<string>(); 
+            links = removeDuplicates(links);
+            linkQueue = removeDuplicates(linkQueue);
             textBox1.Clear();
 
             foreach (var i in links)
@@ -43,6 +64,8 @@ namespace WindowsFormsApplication1
                     textBox1.AppendText(i + Environment.NewLine);
                 }
             }
+            if (links.Count >= numericUpDown1.Value) autoScrape = false;
+
         }
 
         private void goButton_Click(object sender, EventArgs e)
@@ -73,6 +96,22 @@ namespace WindowsFormsApplication1
                 textBox3.Clear();
             }
 
+        }
+        private List<string> removeDuplicates(List<string> listIn)
+        {
+            listIn = listIn.Distinct().ToList();
+            return listIn;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var tempUrl = "";
+            if (!textBox4.Text.Contains("http://"))
+                tempUrl = "http://" + textBox4.Text.ToString();
+            else
+                tempUrl = textBox4.Text.ToString();
+            webBrowser1.Navigate(new Uri(tempUrl));
+            autoScrape = true;
         }
     }
 }
