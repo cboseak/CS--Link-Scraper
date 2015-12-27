@@ -17,14 +17,12 @@ namespace WindowsFormsApplication1
         bool firstTime = true;
         bool firstTimeAuto = true;
         bool manualMode = true;
-        
 
         public Form1()
         {
             InitializeComponent();
             button2.Visible = false;
             checkIfRunning();
-
         }
         List<string> links = new List<string>();
         List<string> linkQueue = new List<string>();
@@ -53,18 +51,17 @@ namespace WindowsFormsApplication1
         }
         private void linkListMaker()
         {
-
             HtmlElementCollection link = webBrowser1.Document.GetElementsByTagName("A");
+
             foreach (HtmlElement i in link)
             {
                 links.Add(i.GetAttribute("href").ToString());
                 linkQueue.Add(i.GetAttribute("href").ToString());
             }
-
             links = removeDuplicates(links);
             linkQueue = removeDuplicates(linkQueue);
             textBox1.Clear();
-
+       
             foreach (var i in links)
             {
                 if (i.Contains("http://") || i.Contains("https://"))
@@ -73,7 +70,6 @@ namespace WindowsFormsApplication1
                 }
             }
             if (links.Count >= numericUpDown1.Value) autoScrape = false;
-
         }
 
         private void goButton_Click(object sender, EventArgs e)
@@ -104,8 +100,8 @@ namespace WindowsFormsApplication1
                 goButton_Click(null, e);
                 textBox3.Clear();
             }
-
         }
+
         private List<string> removeDuplicates(List<string> listIn)
         {
             listIn = listIn.Distinct().ToList();
@@ -153,7 +149,6 @@ namespace WindowsFormsApplication1
                 isRunningLabel.Text = "Not Running";
                 isRunningLabel.ForeColor = Color.DarkRed;
             }
-
         }
     }
 }
