@@ -16,11 +16,14 @@ namespace WindowsFormsApplication1
         bool autoScrape = false;
         bool firstTime = true;
         bool firstTimeAuto = true;
+        bool manualMode = true;
         
 
         public Form1()
         {
             InitializeComponent();
+            button2.Visible = false;
+            checkIfRunning();
 
         }
         List<string> links = new List<string>();
@@ -28,7 +31,7 @@ namespace WindowsFormsApplication1
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             textBox3.Text = webBrowser1.Url.ToString();
-            if(!autoScrape && ! firstTime) linkListMaker();
+            if(!autoScrape && !firstTime && manualMode) linkListMaker();
             if(autoScrape && links.Count <= numericUpDown1.Value && firstTimeAuto)
             {
                 linkListMaker();
@@ -36,11 +39,16 @@ namespace WindowsFormsApplication1
             }
             if(autoScrape && links.Count <= numericUpDown1.Value && !firstTimeAuto)
             {
-                webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
-                linkListMaker();
-                linkQueue.RemoveAt(0);
+                if (linkQueue.ElementAt(0) != null && !webBrowser1.IsBusy)
+                {
+                    webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
+                    linkListMaker();
+                    linkQueue.RemoveAt(0);
+                }
+                manualMode = false;
+                linkCount.Text = links.Count.ToString();
             }
-
+            checkIfRunning();
             firstTime = false;
         }
         private void linkListMaker()
@@ -76,6 +84,7 @@ namespace WindowsFormsApplication1
             else
                 tempUrl = textBox3.Text.ToString();
             webBrowser1.Navigate(new Uri(tempUrl));
+            manualMode = true;
         }
 
         private void backButton_Click(object sender, EventArgs e)
@@ -105,6 +114,7 @@ namespace WindowsFormsApplication1
 
         private void button1_Click(object sender, EventArgs e)
         {
+            button2.Visible = true;
             var tempUrl = "";
             if (!textBox4.Text.Contains("http://"))
                 tempUrl = "http://" + textBox4.Text.ToString();
@@ -112,6 +122,38 @@ namespace WindowsFormsApplication1
                 tempUrl = textBox4.Text.ToString();
             webBrowser1.Navigate(new Uri(tempUrl));
             autoScrape = true;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            autoScrape = false;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            autoScrape = false;
+            links.Clear();
+            linkQueue.Clear();
+            textBox1.Clear();
+            textBox4.Clear();
+            button2.Visible = false;
+            linkCount.Text = links.Count.ToString();
+            checkIfRunning();
+        }
+
+        private void checkIfRunning()
+        {
+            if(autoScrape)
+            {
+                isRunningLabel.Text = "Running";
+                isRunningLabel.ForeColor = Color.DarkGreen;
+            } 
+            if(!autoScrape)
+            {
+                isRunningLabel.Text = "Not Running";
+                isRunningLabel.ForeColor = Color.DarkRed;
+            }
+
         }
     }
 }
