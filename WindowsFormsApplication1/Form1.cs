@@ -34,6 +34,7 @@ namespace WindowsFormsApplication1
             {
                 linkListMaker();
                 firstTimeAuto = false;
+                updateLinkCount();
             }
             if(autoScrape && links.Count <= numericUpDown1.Value && !firstTimeAuto)
             {
@@ -44,7 +45,7 @@ namespace WindowsFormsApplication1
                     linkQueue.RemoveAt(0);
                 }
                 manualMode = false;
-                linkCount.Text = links.Count.ToString();
+                updateLinkCount();
             }
             checkIfRunning();
             firstTime = false;
@@ -110,14 +111,27 @@ namespace WindowsFormsApplication1
 
         private void button1_Click(object sender, EventArgs e)
         {
+            if(links.Count >= numericUpDown1.Value)
+            {
+                MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
+            }
             button2.Visible = true;
             var tempUrl = "";
             if (!textBox4.Text.Contains("http://"))
                 tempUrl = "http://" + textBox4.Text.ToString();
             else
                 tempUrl = textBox4.Text.ToString();
-            webBrowser1.Navigate(new Uri(tempUrl));
-            autoScrape = true;
+            try
+            {
+                webBrowser1.Navigate(new Uri(tempUrl));
+                autoScrape = true;
+            }
+            catch
+            {
+                MessageBox.Show("An Error Occured");
+                autoScrape = false;
+                button2.Visible = false;
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -127,14 +141,7 @@ namespace WindowsFormsApplication1
 
         private void button3_Click(object sender, EventArgs e)
         {
-            autoScrape = false;
-            links.Clear();
-            linkQueue.Clear();
-            textBox1.Clear();
-            textBox4.Clear();
-            button2.Visible = false;
-            linkCount.Text = links.Count.ToString();
-            checkIfRunning();
+            clearAll();
         }
 
         private void checkIfRunning()
@@ -148,6 +155,30 @@ namespace WindowsFormsApplication1
             {
                 isRunningLabel.Text = "Not Running";
                 isRunningLabel.ForeColor = Color.DarkRed;
+            }
+        }
+
+        private void updateLinkCount()
+        {
+            linkCount.Text = links.Count.ToString();
+        }
+        private void clearAll()
+        {
+            autoScrape = false;
+            links.Clear();
+            linkQueue.Clear();
+            textBox1.Clear();
+            textBox4.Clear();
+            button2.Visible = false;
+            updateLinkCount();
+            checkIfRunning();
+        }
+
+        private void textBox4_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if(e.KeyChar == (char)Keys.Enter)
+            {
+                button1_Click(null, e);
             }
         }
     }

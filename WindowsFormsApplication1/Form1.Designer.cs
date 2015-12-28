@@ -42,17 +42,17 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.isRunningLabel = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.linkCount = new System.Windows.Forms.Label();
             this.startingUrlLabel = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.layersLabel = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.linkCount = new System.Windows.Forms.Label();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.isRunningLabel = new System.Windows.Forms.Label();
             this.browserTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -276,6 +276,53 @@
             this.splitContainer1.SplitterDistance = 94;
             this.splitContainer1.TabIndex = 5;
             // 
+            // isRunningLabel
+            // 
+            this.isRunningLabel.AutoSize = true;
+            this.isRunningLabel.Location = new System.Drawing.Point(413, 55);
+            this.isRunningLabel.Name = "isRunningLabel";
+            this.isRunningLabel.Size = new System.Drawing.Size(67, 13);
+            this.isRunningLabel.TabIndex = 9;
+            this.isRunningLabel.Text = "Not Running";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(245, 55);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(85, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Links Returned: ";
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(753, 11);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(72, 25);
+            this.button3.TabIndex = 7;
+            this.button3.Text = "CLEAR";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(566, 11);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(47, 25);
+            this.button2.TabIndex = 6;
+            this.button2.Text = "STOP";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // linkCount
+            // 
+            this.linkCount.AutoSize = true;
+            this.linkCount.Location = new System.Drawing.Point(336, 55);
+            this.linkCount.Name = "linkCount";
+            this.linkCount.Size = new System.Drawing.Size(13, 13);
+            this.linkCount.TabIndex = 5;
+            this.linkCount.Text = "0";
+            // 
             // startingUrlLabel
             // 
             this.startingUrlLabel.AutoSize = true;
@@ -301,6 +348,7 @@
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(408, 20);
             this.textBox4.TabIndex = 1;
+            this.textBox4.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox4_KeyPress);
             // 
             // numericUpDown1
             // 
@@ -337,53 +385,6 @@
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBox1.Size = new System.Drawing.Size(839, 415);
             this.textBox1.TabIndex = 2;
-            // 
-            // linkCount
-            // 
-            this.linkCount.AutoSize = true;
-            this.linkCount.Location = new System.Drawing.Point(336, 55);
-            this.linkCount.Name = "linkCount";
-            this.linkCount.Size = new System.Drawing.Size(13, 13);
-            this.linkCount.TabIndex = 5;
-            this.linkCount.Text = "0";
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(566, 11);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(47, 25);
-            this.button2.TabIndex = 6;
-            this.button2.Text = "STOP";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(753, 11);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(72, 25);
-            this.button3.TabIndex = 7;
-            this.button3.Text = "CLEAR";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(245, 55);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(85, 13);
-            this.label1.TabIndex = 8;
-            this.label1.Text = "Links Returned: ";
-            // 
-            // isRunningLabel
-            // 
-            this.isRunningLabel.AutoSize = true;
-            this.isRunningLabel.Location = new System.Drawing.Point(413, 55);
-            this.isRunningLabel.Name = "isRunningLabel";
-            this.isRunningLabel.Size = new System.Drawing.Size(67, 13);
-            this.isRunningLabel.TabIndex = 9;
-            this.isRunningLabel.Text = "Not Running";
             // 
             // Form1
             // 
