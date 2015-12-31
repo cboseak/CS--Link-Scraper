@@ -73,15 +73,9 @@ namespace WindowsFormsApplication1
             links = removeDuplicatesAsync(links).Result ;
             linkQueue = removeDuplicatesAsync(linkQueue).Result;
             textBox1.Clear();
-       
-            //for each link in links list, output to text box
-            foreach (var i in links)
-            {
-                if (i.Contains("http://") || i.Contains("https://"))
-                {
-                    textBox1.AppendText(i + Environment.NewLine);
-                }
-            }
+            string[] linkArr = convertLinesAsync(links).Result;
+            textBox1.Lines = linkArr;
+
             if (links.Count >= numericUpDown1.Value) autoScrape = false;
         }
 
@@ -204,6 +198,16 @@ namespace WindowsFormsApplication1
             {
                 button1_Click(null, e);
             }
+        }
+
+        private async Task<string[]> convertLinesAsync(List<string> listIn)
+        {
+            string[] tempArr = new string[listIn.Count];
+            await Task.Factory.StartNew(() => {
+                tempArr = listIn.ToArray();
+            }).ConfigureAwait(false);
+
+            return tempArr;
         }
     }
 }
