@@ -70,8 +70,8 @@ namespace WindowsFormsApplication1
                 links.Add(i.GetAttribute("href").ToString());
                 linkQueue.Add(i.GetAttribute("href").ToString());
             }
-            links = removeDuplicates(links);
-            linkQueue = removeDuplicates(linkQueue);
+            links = removeDuplicatesAsync(links).Result ;
+            linkQueue = removeDuplicatesAsync(linkQueue).Result;
             textBox1.Clear();
        
             //for each link in links list, output to text box
@@ -119,9 +119,9 @@ namespace WindowsFormsApplication1
         }
 
         //Removes duplicates in list that is fed in.
-        private List<string> removeDuplicates(List<string> listIn)
+        private async Task<List<string>> removeDuplicatesAsync(List<string> listIn)
         {
-            listIn = listIn.Distinct().ToList();
+            await Task.Factory.StartNew(() => { listIn = listIn.Distinct().ToList(); }).ConfigureAwait(false);       
             return listIn;
         }
 
@@ -185,7 +185,7 @@ namespace WindowsFormsApplication1
         }
         
         //clear all text boxes and lists
-        private void clearAll()
+        private async void clearAll()
         {
             autoScrape = false;
             links.Clear();
