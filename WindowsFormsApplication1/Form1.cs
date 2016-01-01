@@ -13,19 +13,21 @@ namespace WindowsFormsApplication1
 {
     public partial class Form1 : Form
     {
-        bool autoScrape = false;
-        bool firstTime = true;
+        bool autoScrape = false;        bool firstTime = true;
         bool firstTimeAuto = true;
         bool manualMode = true;
+        object _lock = new object();
 
         public Form1()
         {
             InitializeComponent();
             button2.Visible = false;
             checkIfRunning();
+
         }
-        List<string> links = new List<string>();
-        List<string> linkQueue = new List<string>();
+        StringListEnhanced links = new StringListEnhanced();
+        StringListEnhanced linkQueue = new StringListEnhanced();
+
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             //when each page loads, make sure the address bar has an accurate address
@@ -48,11 +50,11 @@ namespace WindowsFormsApplication1
             //then browse to the link at position zero, pull the links on that page, at remove link at position zero
             if(autoScrape && links.Count <= numericUpDown1.Value && !firstTimeAuto)
             {
-                if (linkQueue.ElementAt(0) != null && !webBrowser1.IsBusy)
+                if (linkQueue.Count >= 1 && !webBrowser1.IsBusy)
                 {
                     webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
                     linkListMaker();
-                    linkQueue.RemoveAt(0);
+                    linkQueue.Pop();
                 }
                 manualMode = false;
                 updateLinkCount();
@@ -64,31 +66,40 @@ namespace WindowsFormsApplication1
         {
             HtmlElementCollection link = webBrowser1.Document.GetElementsByTagName("A");
 
-            //for each link collected, add to lists
-            foreach (HtmlElement i in link)
+            Parallel.ForEach(link.Cast<HtmlElement>(), i =>
             {
                 links.Add(i.GetAttribute("href").ToString());
                 linkQueue.Add(i.GetAttribute("href").ToString());
-            }
-            links = removeDuplicatesAsync(links).Result ;
-            linkQueue = removeDuplicatesAsync(linkQueue).Result;
+            });
+
+            links.RemoveDuplicate();
+            linkQueue.RemoveDuplicate();
+
             textBox1.Clear();
+
             string[] linkArr = convertLinesAsync(links).Result;
+
             textBox1.Lines = linkArr;
 
+ 
             if (links.Count >= numericUpDown1.Value) autoScrape = false;
+
         }
 
         //GO BUTTON on Manual Page    
-        private void goButton_Click(object sender, EventArgs e)
+        private async void goButton_Click(object sender, EventArgs e)
         {
             var tempUrl = "";
-            if (!textBox3.Text.Contains("http://"))
-                tempUrl = "http://" + textBox3.Text.ToString();
-            else
-                tempUrl = textBox3.Text.ToString();
+            await Task.Factory.StartNew(() => {
+                if (!textBox3.Text.Contains("http://"))
+                    tempUrl = "http://" + textBox3.Text.ToString();
+                else
+                    tempUrl = textBox3.Text.ToString();
+                manualMode = true;
+            }).ConfigureAwait(false);
+
             webBrowser1.Navigate(new Uri(tempUrl));
-            manualMode = true;
+
         }
         
         //BACK BUTTON on Manual Page
@@ -112,16 +123,10 @@ namespace WindowsFormsApplication1
             }
         }
 
-        //Removes duplicates in list that is fed in.
-        private async Task<List<string>> removeDuplicatesAsync(List<string> listIn)
-        {
-            await Task.Factory.StartNew(() => { listIn = listIn.Distinct().ToList(); }).ConfigureAwait(false);       
-            return listIn;
-        }
-
         //GO BUTTON on Auto Page 
         private void button1_Click(object sender, EventArgs e)
         {
+
             if(links.Count >= numericUpDown1.Value)
             {
                 MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
@@ -179,7 +184,7 @@ namespace WindowsFormsApplication1
         }
         
         //clear all text boxes and lists
-        private async void clearAll()
+        private void clearAll()
         {
             autoScrape = false;
             links.Clear();
