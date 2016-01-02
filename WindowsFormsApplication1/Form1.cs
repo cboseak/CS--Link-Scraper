@@ -86,7 +86,7 @@ namespace WindowsFormsApplication1
             linkQueue.RemoveDuplicate();
 
             UiUpdateHelper.clearTextbox(textBox1, _syncContext);
-            string[] linkArr = convertLinesAsync(links);
+            string[] linkArr = convertLines(links);
             UiUpdateHelper.updateTextboxLines(textBox1, linkArr, _syncContext);
 
             if (links.Count >= numericUpDown1.Value) autoScrape = false;
@@ -213,7 +213,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        private string[] convertLinesAsync(List<string> listIn)
+        private string[] convertLines(List<string> listIn)
         {
             string[] tempArr = new string[listIn.Count];
             tempArr = listIn.ToArray();
