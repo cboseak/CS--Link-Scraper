@@ -27,6 +27,16 @@ namespace WindowsFormsApplication1
             else if (runAsync)
                 RemoveDuplicateAsync();
         }
+        private void RemoveDuplicateAsync()
+        {
+            List<string> temp = new List<string>();
+            temp = this.Distinct().ToList();
+            this.Clear();
+            Parallel.ForEach(temp, i => {
+                this.Add(i);
+            });
+
+        }
 
         public void RemoveEmpty()
         {
@@ -158,17 +168,6 @@ namespace WindowsFormsApplication1
             });
         }
 
-        private async void RemoveDuplicateAsync()
-        {
-            List<string> temp = new List<string>();
-            await Task.Factory.StartNew(() => {
-                temp = this.Distinct().ToList();
-            }).ConfigureAwait(false);
-            this.Clear();
-            Parallel.ForEach(temp, i => {
-                this.Add(i);
-            });
 
-        }
     }
 }
