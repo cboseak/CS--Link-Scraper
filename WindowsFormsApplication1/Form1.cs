@@ -28,7 +28,6 @@ namespace WindowsFormsApplication1
             button2.Visible = false;
             checkIfRunning();
             webBrowser1.ScriptErrorsSuppressed = true;
-
         }
         StringListEnhanced links = new StringListEnhanced();
         StringListEnhanced linkQueue = new StringListEnhanced();
@@ -131,29 +130,17 @@ namespace WindowsFormsApplication1
         //GO BUTTON on Auto Page 
         private void button1_Click(object sender, EventArgs e)
         {
-
-            if(links.Count >= numericUpDown1.Value)
+            var url = textBox4.Text;
+            do
             {
-                MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
-            }
-            button2.Visible = true;
-            var tempUrl = "";
-            if (!textBox4.Text.Contains("http://"))
-                tempUrl = "http://" + textBox4.Text.ToString();
-            else
-                tempUrl = textBox4.Text.ToString();
-            try
-            {
-                webBrowser1.Navigate(new Uri(tempUrl));
-                autoScrape = true;
-            }
-            catch
-            {
-                MessageBox.Show("An Error Occured");
-                autoScrape = false;
-                button2.Visible = false;
-            }
-        }
+                var temp = ScraperLogic.scraper(url);
+                linkQueue.AddRange(temp);
+                links.AddRange(temp);
+                ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
+                url = linkQueue.ElementAt(0);
+                linkQueue.Pop();
+            } while (linkQueue.Count > 0 && links.Count <= numericUpDown1.Value);
+         }
 
         //sets automatic scrape status to false so loop will stop
         private void button2_Click(object sender, EventArgs e)
