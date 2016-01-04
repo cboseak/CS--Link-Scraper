@@ -23,10 +23,19 @@ namespace WindowsFormsApplication1
             return checkHtmlForLinks(outputHtml, urlPatternEnhanced.ToString());
         }
 
+
+
         internal static string getHtml(string url)
         {
             WebClient wc = new WebClient();
-            return wc.DownloadString(url);
+            try
+            {
+                return wc.DownloadString(url);
+            }
+            catch
+            {
+                return "";
+            }
         }
         
         

@@ -136,6 +136,8 @@ namespace WindowsFormsApplication1
                 var temp = ScraperLogic.scraper(url);
                 linkQueue.AddRange(temp);
                 links.AddRange(temp);
+                links.RemoveDuplicate();
+                linkQueue.RemoveDuplicate();
                 ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
                 url = linkQueue.ElementAt(0);
                 linkQueue.Pop();
