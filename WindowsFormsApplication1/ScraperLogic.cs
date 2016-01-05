@@ -23,8 +23,6 @@ namespace WindowsFormsApplication1
             return checkHtmlForLinks(outputHtml, urlPatternEnhanced.ToString());
         }
 
-
-
         internal static string getHtml(string url)
         {
             WebClient wc = new WebClient();
@@ -38,15 +36,10 @@ namespace WindowsFormsApplication1
             }
         }
         
-        
-        
-        
         internal static void setTextBox(TextBox tbToChange, string textToSet)
         {
             tbToChange.Text = textToSet;
         }
-        
-        
         
         internal static StringListEnhanced checkHtmlForLinks(string stringToCheck, string regexToCheck)
         {
@@ -61,15 +54,10 @@ namespace WindowsFormsApplication1
             return temp;
         }
         
-        
-        
-        
         internal static void setTextBoxFromArray(TextBox tbToChange, String[] stringArrIn)
         {
             tbToChange.Lines = stringArrIn;
         }
-
-
 
         internal static string urlFormatChecker(string urlToCheck)
         {

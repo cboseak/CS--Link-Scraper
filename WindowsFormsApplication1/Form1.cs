@@ -128,12 +128,12 @@ namespace WindowsFormsApplication1
         }
 
         //GO BUTTON on Auto Page 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
             var url = textBox4.Text;
             do
             {
-                var temp = ScraperLogic.scraper(url);
+                StringListEnhanced temp = await Task.Run(() => ScraperLogic.scraper(url));
                 linkQueue.AddRange(temp);
                 links.AddRange(temp);
                 links.RemoveDuplicate();

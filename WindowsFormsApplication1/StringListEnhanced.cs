@@ -20,20 +20,22 @@ namespace WindowsFormsApplication1
                 this.Add(i);
             }
         }
-        public void RemoveDuplicate(bool runAsync)
+        public async void RemoveDuplicate(bool runAsync)
         {
             if (!runAsync)
                 RemoveDuplicate();
             else if (runAsync)
-                RemoveDuplicateAsync();
+                await RemoveDuplicateAsync();
         }
-        private void RemoveDuplicateAsync()
+        internal Task RemoveDuplicateAsync()
         {
-            List<string> temp = new List<string>();
-            temp = this.Distinct().ToList();
-            this.Clear();
-            Parallel.ForEach(temp, i => {
-                this.Add(i);
+            return Task.Run(() => { 
+                List<string> temp = new List<string>();
+                temp = this.Distinct().ToList();
+                this.Clear();
+                Parallel.ForEach(temp, i => {
+                    this.Add(i);
+                });
             });
 
         }
@@ -58,12 +60,12 @@ namespace WindowsFormsApplication1
             }
         }
 
-        public void RemoveEmpty(bool runAsync)
+        public async void RemoveEmpty(bool runAsync)
         {
             if (!runAsync)
                 RemoveEmpty();
             else if (runAsync)
-                RemoveEmptyAync();
+                await RemoveEmptyAync();
         }
 
         public void Pop()
@@ -88,7 +90,7 @@ namespace WindowsFormsApplication1
                 HCollectionToCL(collectionIn);
         }
 
-        private StringListEnhanced HCollectionToCLAsync(HtmlElementCollection collectionIn)
+        internal StringListEnhanced HCollectionToCLAsync(HtmlElementCollection collectionIn)
         {
             StringListEnhanced temp = new StringListEnhanced();
             foreach (HtmlElement i in collectionIn)
@@ -148,23 +150,25 @@ namespace WindowsFormsApplication1
             this.AddRange(listIn);
         }
 
-        private void RemoveEmptyAync()
+        internal Task RemoveEmptyAync()
         {
-            Regex whiteSpace = new Regex(@"/^\s*$/");
-            Regex emptyString = new Regex(@"^$");
-            List<string> temp = new List<string>();
+            return Task.Run(() => { 
+                Regex whiteSpace = new Regex(@"/^\s*$/");
+                Regex emptyString = new Regex(@"^$");
+                List<string> temp = new List<string>();
 
-            Parallel.ForEach(this, i => {
-                if (!emptyString.IsMatch(i) && !whiteSpace.IsMatch(i) && !string.IsNullOrEmpty(i) && !string.IsNullOrWhiteSpace(i))
-                {
-                    temp.Add(i);
-                }
-            });
+                Parallel.ForEach(this, i => {
+                    if (!emptyString.IsMatch(i) && !whiteSpace.IsMatch(i) && !string.IsNullOrEmpty(i) && !string.IsNullOrWhiteSpace(i))
+                    {
+                        temp.Add(i);
+                    }
+                });
 
-            this.Clear();
+                this.Clear();
 
-            Parallel.ForEach(temp, i => {
-                this.Add(i);
+                Parallel.ForEach(temp, i => {
+                    this.Add(i);
+                });
             });
         }
 
