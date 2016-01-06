@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.Diagnostics;
 
 namespace WindowsFormsApplication1
 {
@@ -32,12 +33,14 @@ namespace WindowsFormsApplication1
         StringListEnhanced links = new StringListEnhanced();
         StringListEnhanced linkQueue = new StringListEnhanced();
 
-        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        private async void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            textBox3.Text = webBrowser1.Url.ToString();                                     //when each page loads, make sure the address bar has an accurate address
+            await Task.Delay(20);
+
+            textBox3.Text = webBrowser1.Url.ToString();                                   //when each page loads, make sure the address bar has an accurate address
 
             if (!autoScrape && !firstTime && manualMode) linkListMaker();                   //MANUAL MODE - This hit if you're not in autoscrape mode and you browse. 
-                                                                                            //Every page visited pull all links and adds them to the lists
+            //Every page visited pull all links and adds them to the lists
 
             if (autoScrape && links.Count <= numericUpDown1.Value && firstTimeAuto)         //Autoscape is AND there are less links than requested AND it is the first time around
             {                                                                               //then pull all links from current page, set first time to false, and update the link count
@@ -61,10 +64,15 @@ namespace WindowsFormsApplication1
             checkIfRunning();
             firstTime = false;
         }
-        private void linkListMaker()
+        private  void linkListMaker()
         {
-
-            UiUpdateHelper.getAllLinksFromBrowser(webBrowser1, _syncContext);
+            HtmlElementCollection temp = webBrowser1.Document.GetElementsByTagName("A");
+            Form1.receivesHtmlCollection(temp);
+            //webBrowser1.BeginInvoke(new Action(() =>
+            //{
+            //    HtmlElementCollection temp = webBrowser1.Document.GetElementsByTagName("A");
+            //    Form1.receivesHtmlCollection(temp);
+            //}));
 
             foreach (HtmlElement i in linkCollection)
             {
@@ -81,15 +89,22 @@ namespace WindowsFormsApplication1
                 }
             }
 
+            Thread t1 = new Thread(new ThreadStart(() =>
+            {
+
+
+
             links.RemoveDuplicate();
             linkQueue.RemoveDuplicate();
 
-            UiUpdateHelper.clearTextbox(textBox1, _syncContext);
-            string[] linkArr = convertLines(links);
-            UiUpdateHelper.updateTextboxLines(textBox1, linkArr, _syncContext);
+      
+                UiUpdateHelper.clearTextbox(textBox1, _syncContext);
+                string[] linkArr = convertLines(links);
+                UiUpdateHelper.updateTextboxLines(textBox1, linkArr, _syncContext);
 
-            if (links.Count >= numericUpDown1.Value) autoScrape = false;
-
+                if (links.Count >= numericUpDown1.Value) autoScrape = false;
+            }));
+            t1.Start();
         }
      
         //GO BUTTON on Manual Page    
@@ -128,20 +143,49 @@ namespace WindowsFormsApplication1
         }
 
         //GO BUTTON on Auto Page 
-        private async void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            var url = textBox4.Text;
-            do
+            Thread t1 = new Thread(new ThreadStart(() =>
+            { 
+            if (links.Count >= numericUpDown1.Value)
             {
-                StringListEnhanced temp = await Task.Run(() => ScraperLogic.scraper(url));
-                linkQueue.AddRange(temp);
-                links.AddRange(temp);
-                links.RemoveDuplicate();
-                linkQueue.RemoveDuplicate();
-                ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
-                url = linkQueue.ElementAt(0);
-                linkQueue.Pop();
-            } while (linkQueue.Count > 0 && links.Count <= numericUpDown1.Value);
+                MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
+            }
+            button2.BeginInvoke(new Action(() => { button2.Visible = true; }));
+            
+            var tempUrl = "";
+            if (!textBox4.Text.Contains("http://"))
+                tempUrl = "http://" + textBox4.Text.ToString();
+            else
+                tempUrl = textBox4.Text.ToString();
+            try
+            {
+                webBrowser1.Navigate(new Uri(tempUrl));
+                autoScrape = true;
+            }
+            catch
+            {
+                MessageBox.Show("An Error Occured");
+                autoScrape = false;
+                button2.BeginInvoke(new Action(() => { button2.Visible = false; }));
+            }
+            }));
+            t1.Start();
+            //Thread t1 = new Thread(new ThreadStart(() => { 
+            //var url = textBox4.Text;
+            //do
+            //{
+            //    StringListEnhanced temp = ScraperLogic.scraper(url);
+            //    linkQueue.AddRange(temp);
+            //    links.AddRange(temp);
+            //    links.RemoveDuplicate();
+            //    linkQueue.RemoveDuplicate();
+            //    textBox1.BeginInvoke(new Action(() => { ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray()); }));
+            //    url = linkQueue.ElementAt(0);
+            //    linkQueue.Pop();
+            //} while (linkQueue.Count > 0 && links.Count <= numericUpDown1.Value);
+            //}));
+            //t1.Start();
          }
 
         //sets automatic scrape status to false so loop will stop
