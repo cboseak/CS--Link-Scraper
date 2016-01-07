@@ -31,8 +31,8 @@ namespace WindowsFormsApplication1
             webBrowser1.ScriptErrorsSuppressed = true;
         }
         StringListEnhanced links = new StringListEnhanced();
-        StringListEnhanced linkQueue = new StringListEnhanced();
-
+        //StringListEnhanced linkQueue = new StringListEnhanced();
+        Queue<string> linkQueue = new Queue<string>();
         private async void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             await Task.Delay(20);
@@ -55,7 +55,7 @@ namespace WindowsFormsApplication1
                 {
                     webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
                     linkListMaker();
-                    linkQueue.Pop();
+                    //linkQueue.Pop();
                 }
                 manualMode = false;
                 updateLinkCount();
@@ -81,13 +81,13 @@ namespace WindowsFormsApplication1
                     links.Add(i.GetAttribute("href").ToString());
                 }
             }
-            foreach (HtmlElement i in linkCollection)
-            {
-                lock (_lock)
-                {
-                    linkQueue.Add(i.GetAttribute("href").ToString());
-                }
-            }
+            //foreach (HtmlElement i in linkCollection)
+            //{
+            //    lock (_lock)
+            //    {
+            //        linkQueue.Add(i.GetAttribute("href").ToString());
+            //    }
+            //}
 
             Thread t1 = new Thread(new ThreadStart(() =>
             {
@@ -95,7 +95,7 @@ namespace WindowsFormsApplication1
 
 
             links.RemoveDuplicate();
-            linkQueue.RemoveDuplicate();
+            //linkQueue.RemoveDuplicate();
 
       
                 UiUpdateHelper.clearTextbox(textBox1, _syncContext);
@@ -143,34 +143,60 @@ namespace WindowsFormsApplication1
         }
 
         //GO BUTTON on Auto Page 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
-            Thread t1 = new Thread(new ThreadStart(() =>
-            { 
-            if (links.Count >= numericUpDown1.Value)
-            {
-                MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
-            }
-            button2.BeginInvoke(new Action(() => { button2.Visible = true; }));
+            StringListEnhanced tempList = new StringListEnhanced();
+            string url = textBox4.Text;
+
+                do
+                {
+                    CancellationTokenSource ct = new CancellationTokenSource();
+                   
+                    await Task.Run(() => { tempList = ScraperLogic.scraper(url); },ct.Token);
+
+                    foreach(var i in tempList)
+                    {
+                        linkQueue.Enqueue(i);
+                    }
+                    links.AddRange(tempList);
+                    links.RemoveDuplicate();
+
+                    //ct.Cancel();
+                    ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
+                    url = linkQueue.Dequeue();
+
+                } while (links.Count <= numericUpDown1.Value);
+                ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
+
+
+
+
+            //Thread t1 = new Thread(new ThreadStart(() =>
+            //{ 
+            //if (links.Count >= numericUpDown1.Value)
+            //{
+            //    MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
+            //}
+            //button2.BeginInvoke(new Action(() => { button2.Visible = true; }));
             
-            var tempUrl = "";
-            if (!textBox4.Text.Contains("http://"))
-                tempUrl = "http://" + textBox4.Text.ToString();
-            else
-                tempUrl = textBox4.Text.ToString();
-            try
-            {
-                webBrowser1.Navigate(new Uri(tempUrl));
-                autoScrape = true;
-            }
-            catch
-            {
-                MessageBox.Show("An Error Occured");
-                autoScrape = false;
-                button2.BeginInvoke(new Action(() => { button2.Visible = false; }));
-            }
-            }));
-            t1.Start();
+            //var tempUrl = "";
+            //if (!textBox4.Text.Contains("http://"))
+            //    tempUrl = "http://" + textBox4.Text.ToString();
+            //else
+            //    tempUrl = textBox4.Text.ToString();
+            //try
+            //{
+            //    webBrowser1.Navigate(new Uri(tempUrl));
+            //    autoScrape = true;
+            //}
+            //catch
+            //{
+            //    MessageBox.Show("An Error Occured");
+            //    autoScrape = false;
+            //    button2.BeginInvoke(new Action(() => { button2.Visible = false; }));
+            //}
+            //}));
+            //t1.Start();
             //Thread t1 = new Thread(new ThreadStart(() => { 
             //var url = textBox4.Text;
             //do
