@@ -13,14 +13,22 @@ namespace WindowsFormsApplication1
     {
         static Regex urlPattern = new Regex(@"^http(s)?://([\w-]+.)+[\w-]+(/[\w- ./?%&=])?$");
         static Regex urlPatternEnhanced = new Regex("http://([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&amp;\\*\\(\\)_\\-\\=\\+\\\\\\/\\?\\.\\:\\;\\'\\,]*)?", RegexOptions.IgnoreCase);
-        static StringListEnhanced listOfLinks = new StringListEnhanced();
-        static StringListEnhanced linkQueue = new StringListEnhanced();
-
+        static string lastUrl = "";
         internal static StringListEnhanced scraper(string url)
         {
             url = urlFormatChecker(url);
+            Uri uri;
             string outputHtml = getHtml(url);
-            var uri = new Uri(url);
+            try
+            {
+                uri = new Uri(url);
+                lastUrl = url;
+            }
+            catch
+            {
+                uri = new Uri(lastUrl);
+            }
+
             var host = uri.Host;
             url = urlFormatChecker(host.ToString());
 
@@ -95,17 +103,30 @@ namespace WindowsFormsApplication1
                 {
                     i.Href = m2.Groups[1].Value;
                 }
-
-                // 4.
-                // Remove inner tags from text.
                 string t = Regex.Replace(value, @"\s*<.*?>\s*", "",
                 RegexOptions.Singleline);
                 i.Text = t;
 
-                list.Add(baseUrl + i.Href);
+                if (("" + i.Href).Length < 2)
+                {
+                    list.Add(baseUrl);
+                }
+                else if(("" + i.Href).Contains("http"))
+                {
+                    list.Add(i.Href);
+                }
+                else
+                {
+                    list.Add(baseUrl + i.Href);
+                }
+                //}
+                //else
+                //{
+                //    list.Add(baseUrl);
+                //}
             }
             return list;
-        }
+        }   
         public struct LinkItem
         {
             public string Href;

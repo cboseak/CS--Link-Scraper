@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace WindowsFormsApplication1
 {
@@ -17,10 +18,11 @@ namespace WindowsFormsApplication1
         private SynchronizationContext _syncContext;
         bool autoScrape = false;
         bool firstTime = true;
-        bool firstTimeAuto = true;
+        bool running = false;
         bool manualMode = true;
         object _lock = new object();
         static HtmlElementCollection linkCollection;
+        CancellationTokenSource ct = new CancellationTokenSource();
 
         public Form1()
         {
@@ -30,36 +32,17 @@ namespace WindowsFormsApplication1
             checkIfRunning();
             webBrowser1.ScriptErrorsSuppressed = true;
         }
-        StringListEnhanced links = new StringListEnhanced();
-        //StringListEnhanced linkQueue = new StringListEnhanced();
-        Queue<string> linkQueue = new Queue<string>();
-        private async void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+
+        ConcurrentBag<string> links = new ConcurrentBag<string>();
+        ConcurrentQueue<string> linkQueue = new ConcurrentQueue<string>();
+
+        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            await Task.Delay(20);
 
             textBox3.Text = webBrowser1.Url.ToString();                                   //when each page loads, make sure the address bar has an accurate address
 
             if (!autoScrape && !firstTime && manualMode) linkListMaker();                   //MANUAL MODE - This hit if you're not in autoscrape mode and you browse. 
             //Every page visited pull all links and adds them to the lists
-
-            if (autoScrape && links.Count <= numericUpDown1.Value && firstTimeAuto)         //Autoscape is AND there are less links than requested AND it is the first time around
-            {                                                                               //then pull all links from current page, set first time to false, and update the link count
-                linkListMaker();
-                firstTimeAuto = false;
-                updateLinkCount();
-            }
-
-            if (autoScrape && links.Count <= numericUpDown1.Value && !firstTimeAuto)        //Autoscape is AND there are less links than requested AND it is at least second time around
-            {
-                if (linkQueue.Count > 0 && !webBrowser1.IsBusy)
-                {
-                    webBrowser1.Navigate(new Uri(linkQueue.ElementAt(0)));
-                    linkListMaker();
-                    //linkQueue.Pop();
-                }
-                manualMode = false;
-                updateLinkCount();
-            }                                                              //then browse to the link at position zero, pull the links on that page, at remove link at position zero
 
             checkIfRunning();
             firstTime = false;
@@ -68,11 +51,6 @@ namespace WindowsFormsApplication1
         {
             HtmlElementCollection temp = webBrowser1.Document.GetElementsByTagName("A");
             Form1.receivesHtmlCollection(temp);
-            //webBrowser1.BeginInvoke(new Action(() =>
-            //{
-            //    HtmlElementCollection temp = webBrowser1.Document.GetElementsByTagName("A");
-            //    Form1.receivesHtmlCollection(temp);
-            //}));
 
             foreach (HtmlElement i in linkCollection)
             {
@@ -81,27 +59,13 @@ namespace WindowsFormsApplication1
                     links.Add(i.GetAttribute("href").ToString());
                 }
             }
-            //foreach (HtmlElement i in linkCollection)
-            //{
-            //    lock (_lock)
-            //    {
-            //        linkQueue.Add(i.GetAttribute("href").ToString());
-            //    }
-            //}
 
             Thread t1 = new Thread(new ThreadStart(() =>
             {
-
-
-
-            links.RemoveDuplicate();
-            //linkQueue.RemoveDuplicate();
-
-      
+                links = new ConcurrentBag<string>(links.Distinct().ToList());
                 UiUpdateHelper.clearTextbox(textBox1, _syncContext);
-                string[] linkArr = convertLines(links);
+                string[] linkArr = links.ToArray();
                 UiUpdateHelper.updateTextboxLines(textBox1, linkArr, _syncContext);
-
                 if (links.Count >= numericUpDown1.Value) autoScrape = false;
             }));
             t1.Start();
@@ -145,85 +109,53 @@ namespace WindowsFormsApplication1
         //GO BUTTON on Auto Page 
         private async void button1_Click(object sender, EventArgs e)
         {
-            StringListEnhanced tempList = new StringListEnhanced();
-            string url = textBox4.Text;
-
-                do
+            if (textBox4.Text.Length > 4)
+            {
+                UiUpdateHelper.updateButtonVisibility(button2, true, _syncContext);
+                ct = new CancellationTokenSource();
+                StringListEnhanced tempList = new StringListEnhanced();
+                string url = textBox4.Text;
+                autoScrape = true;
+                checkIfRunning();
+                await Task.Run(() =>
                 {
-                    CancellationTokenSource ct = new CancellationTokenSource();
-                   
-                    await Task.Run(() => { tempList = ScraperLogic.scraper(url); },ct.Token);
-
-                    foreach(var i in tempList)
+                    do
                     {
-                        linkQueue.Enqueue(i);
-                    }
-                    links.AddRange(tempList);
-                    links.RemoveDuplicate();
+                        tempList = ScraperLogic.scraper(url);
 
-                    //ct.Cancel();
-                    ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
-                    url = linkQueue.Dequeue();
-
-                } while (links.Count <= numericUpDown1.Value);
+                        foreach (var i in tempList)
+                        {
+                            linkQueue.Enqueue(i);
+                            links.Add(i);
+                        }
+                        links = new ConcurrentBag<string>(links.Distinct().ToList());
+                        BeginInvoke(new Action(() => { ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray()); }));
+                        linkQueue.TryDequeue(out url);
+                        BeginInvoke(new Action(() => { updateLinkCount(); }));
+                    } while (links.Count <= numericUpDown1.Value && autoScrape == true);
+                }, ct.Token);
+                ct.Cancel();
+                autoScrape = false;
+                UiUpdateHelper.updateButtonVisibility(button2, false, _syncContext);
+                checkIfRunning();
                 ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray());
-
-
-
-
-            //Thread t1 = new Thread(new ThreadStart(() =>
-            //{ 
-            //if (links.Count >= numericUpDown1.Value)
-            //{
-            //    MessageBox.Show("Amount of links exceeds number of links requested, increase request amount or clear and try again");
-            //}
-            //button2.BeginInvoke(new Action(() => { button2.Visible = true; }));
-            
-            //var tempUrl = "";
-            //if (!textBox4.Text.Contains("http://"))
-            //    tempUrl = "http://" + textBox4.Text.ToString();
-            //else
-            //    tempUrl = textBox4.Text.ToString();
-            //try
-            //{
-            //    webBrowser1.Navigate(new Uri(tempUrl));
-            //    autoScrape = true;
-            //}
-            //catch
-            //{
-            //    MessageBox.Show("An Error Occured");
-            //    autoScrape = false;
-            //    button2.BeginInvoke(new Action(() => { button2.Visible = false; }));
-            //}
-            //}));
-            //t1.Start();
-            //Thread t1 = new Thread(new ThreadStart(() => { 
-            //var url = textBox4.Text;
-            //do
-            //{
-            //    StringListEnhanced temp = ScraperLogic.scraper(url);
-            //    linkQueue.AddRange(temp);
-            //    links.AddRange(temp);
-            //    links.RemoveDuplicate();
-            //    linkQueue.RemoveDuplicate();
-            //    textBox1.BeginInvoke(new Action(() => { ScraperLogic.setTextBoxFromArray(textBox1, links.ToArray()); }));
-            //    url = linkQueue.ElementAt(0);
-            //    linkQueue.Pop();
-            //} while (linkQueue.Count > 0 && links.Count <= numericUpDown1.Value);
-            //}));
-            //t1.Start();
-         }
+            }
+        }
 
         //sets automatic scrape status to false so loop will stop
         private void button2_Click(object sender, EventArgs e)
         {
             autoScrape = false;
+            checkIfRunning();
+            ct.Cancel();
+            ct = new CancellationTokenSource();
+            UiUpdateHelper.updateButtonVisibility(button2, false, _syncContext);
         }
 
         //CLEAR BUTTON - Call clear all function below
         private async void button3_Click(object sender, EventArgs e)
         {
-            await Task.Factory.StartNew(() => { clearAll(); }).ConfigureAwait(false);
+            await Task.Factory.StartNew(() => { clearAll(); });
         }
 
         //checks if running so that it can update the status label
@@ -254,8 +186,8 @@ namespace WindowsFormsApplication1
         private void clearAll()
         {
             autoScrape = false;
-            links.Clear();
-            linkQueue.Clear();
+            links = new ConcurrentBag<string>();
+            linkQueue = new ConcurrentQueue<string>();
             UiUpdateHelper.clearTextbox(textBox1, _syncContext);
             UiUpdateHelper.clearTextbox(textBox4, _syncContext);
             UiUpdateHelper.updateButtonVisibility(button2, false, _syncContext);
